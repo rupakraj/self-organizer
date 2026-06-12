@@ -1,4 +1,4 @@
-// Tab switching
+// ── Tab switching ─────────────────────────────────────────────────────────────
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -11,22 +11,21 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 
-// Tags
+// ── Shared CRUD factory ───────────────────────────────────────────────────────
+// Creates a self-contained CRUD controller for any tag-like resource.
+// Options: { apiBase, bodyId, modalId, titleId, errorId, nameId, slugId, colorId, iconPickerId }
 
-const Tags = (() => {
+function makeCrudController({ apiBase, bodyId, modalId, titleId, errorId, nameId, slugId, colorId, iconPickerId }) {
   let _editId = null;
 
-  const modal  = document.getElementById('tag-modal');
-  const title  = document.getElementById('modal-title');
-  const errBox = document.getElementById('modal-error');
-  const fName  = document.getElementById('f-name');
-  const fSlug  = document.getElementById('f-slug');
-  const fColor = document.getElementById('f-color');
+  const modal      = document.getElementById(modalId);
+  const titleEl    = document.getElementById(titleId);
+  const errBox     = document.getElementById(errorId);
+  const fName      = document.getElementById(nameId);
+  const fSlug      = document.getElementById(slugId);
+  const fColor     = document.getElementById(colorId);
+  const iconPicker = new EmojiPicker(document.getElementById(iconPickerId));
 
-  // Emoji picker instance
-  const iconPicker = new EmojiPicker(document.getElementById('f-icon-picker'));
-
-  // Auto-generate slug from name unless user has manually edited it
   let slugEdited = false;
   fSlug.addEventListener('input', () => { slugEdited = true; });
   fName.addEventListener('input', () => {
@@ -48,20 +47,20 @@ const Tags = (() => {
   function openAdd() {
     _editId = null;
     _clearForm();
-    title.textContent = 'Add Tag';
+    titleEl.textContent = `Add ${_label()}`;
     modal.classList.add('is-open');
     fName.focus();
   }
 
-  function openEdit(tag) {
-    _editId = tag.id;
+  function openEdit(item) {
+    _editId = item.id;
     _clearForm();
-    fName.value  = tag.name;
-    fSlug.value  = tag.slug;
-    fColor.value = tag.color;
+    fName.value  = item.name;
+    fSlug.value  = item.slug;
+    fColor.value = item.color;
     slugEdited   = true;
-    iconPicker.setValue(tag.icon || '');
-    title.textContent = 'Edit Tag';
+    iconPicker.setValue(item.icon || '');
+    titleEl.textContent = `Edit ${_label()}`;
     modal.classList.add('is-open');
     fName.focus();
   }
@@ -77,8 +76,7 @@ const Tags = (() => {
       icon:  iconPicker.getValue(),
       color: fColor.value,
     };
-
-    const url    = _editId ? `/api/tags/${_editId}` : '/api/tags';
+    const url    = _editId ? `${apiBase}/${_editId}` : apiBase;
     const method = _editId ? 'PUT' : 'POST';
 
     const res  = await fetch(url, {
@@ -94,66 +92,99 @@ const Tags = (() => {
       return;
     }
     closeModal();
-    loadTags();
+    load();
   }
 
-  async function toggleActive(tag) {
-    const url    = tag.is_active ? `/api/tags/${tag.id}` : `/api/tags/${tag.id}/restore`;
-    const method = tag.is_active ? 'DELETE' : 'POST';
+  async function _toggleActive(item) {
+    const url    = item.is_active ? `${apiBase}/${item.id}` : `${apiBase}/${item.id}/restore`;
+    const method = item.is_active ? 'DELETE' : 'POST';
     await fetch(url, { method });
-    loadTags();
+    load();
   }
 
-  function _renderRow(tag) {
-    const tr = document.createElement('tr');
-    if (!tag.is_active) tr.classList.add('is-inactive');
+  function _label() {
+    // Derive a human label from the API base path, e.g. '/api/tags' → 'Tag'
+    const seg = apiBase.split('/').pop();
+    return seg.charAt(0).toUpperCase() + seg.slice(1, -1); // strip trailing 's'
+  }
 
-    const nameCell = tag.is_active ? tag.name : `<span class="line-through">${tag.name}</span>`;
-    const toggleLabel = tag.is_active ? 'Deactivate' : 'Restore';
-    const toggleClass = tag.is_active
+  function _renderRow(item) {
+    const tr = document.createElement('tr');
+    if (!item.is_active) tr.classList.add('is-inactive');
+
+    const nameCell    = item.is_active ? item.name : `<span class="line-through">${item.name}</span>`;
+    const toggleLabel = item.is_active ? 'Deactivate' : 'Restore';
+    const toggleClass = item.is_active
       ? 'text-red-400 hover:text-red-600'
       : 'text-green-500 hover:text-green-700';
 
     tr.innerHTML = `
       <td>
         <span class="inline-block w-5 h-5 rounded-full border border-gray-200"
-              style="background:${tag.color}"></span>
+              style="background:${item.color}"></span>
       </td>
-      <td>${tag.icon ? `<span class="mr-1">${tag.icon}</span>` : ''}${nameCell}</td>
-      <td class="font-mono text-gray-400 text-xs">${tag.slug}</td>
-      <td class="text-lg">${tag.icon || '—'}</td>
+      <td>${item.icon ? `<span class="mr-1">${item.icon}</span>` : ''}${nameCell}</td>
+      <td class="font-mono text-gray-400 text-xs">${item.slug}</td>
+      <td class="text-lg">${item.icon || '—'}</td>
       <td>
-        <span class="badge ${tag.is_active ? 'badge--active' : 'badge--todo'}">
-          ${tag.is_active ? 'Active' : 'Inactive'}
+        <span class="badge ${item.is_active ? 'badge--active' : 'badge--todo'}">
+          ${item.is_active ? 'Active' : 'Inactive'}
         </span>
       </td>
       <td class="flex items-center gap-3">
-        ${tag.is_active ? `<button class="text-indigo-400 hover:text-indigo-600 text-xs font-medium" data-edit>Edit</button>` : ''}
+        ${item.is_active ? `<button class="text-indigo-400 hover:text-indigo-600 text-xs font-medium" data-edit>Edit</button>` : ''}
         <button class="${toggleClass} text-xs font-medium" data-toggle>${toggleLabel}</button>
       </td>
     `;
 
-    if (tag.is_active) {
-      tr.querySelector('[data-edit]').addEventListener('click', () => openEdit(tag));
+    if (item.is_active) {
+      tr.querySelector('[data-edit]').addEventListener('click', () => openEdit(item));
     }
-    tr.querySelector('[data-toggle]').addEventListener('click', () => toggleActive(tag));
+    tr.querySelector('[data-toggle]').addEventListener('click', () => _toggleActive(item));
     return tr;
   }
 
-  async function loadTags() {
-    const res  = await fetch('/api/tags');
-    const tags = await res.json();
-    const body = document.getElementById('tags-body');
+  async function load() {
+    const res   = await fetch(apiBase);
+    const items = await res.json();
+    const body  = document.getElementById(bodyId);
     body.innerHTML = '';
 
-    if (!tags.length) {
-      body.innerHTML = '<tr><td colspan="6" class="text-center text-gray-400 py-6">No tags yet.</td></tr>';
+    if (!items.length) {
+      body.innerHTML = `<tr><td colspan="6" class="text-center text-gray-400 py-6">No ${apiBase.split('/').pop()} yet.</td></tr>`;
       return;
     }
-    tags.forEach(tag => body.appendChild(_renderRow(tag)));
+    items.forEach(item => body.appendChild(_renderRow(item)));
   }
 
-  loadTags();
+  load();
 
   return { openAdd, openEdit, closeModal, submit };
-})();
+}
+
+
+// ── Controllers ───────────────────────────────────────────────────────────────
+
+const Tags = makeCrudController({
+  apiBase:      '/api/tags',
+  bodyId:       'tags-body',
+  modalId:      'tag-modal',
+  titleId:      'tag-modal-title',
+  errorId:      'tag-modal-error',
+  nameId:       't-name',
+  slugId:       't-slug',
+  colorId:      't-color',
+  iconPickerId: 't-icon-picker',
+});
+
+const Categories = makeCrudController({
+  apiBase:      '/api/categories',
+  bodyId:       'categories-body',
+  modalId:      'cat-modal',
+  titleId:      'cat-modal-title',
+  errorId:      'cat-modal-error',
+  nameId:       'c-name',
+  slugId:       'c-slug',
+  colorId:      'c-color',
+  iconPickerId: 'c-icon-picker',
+});

@@ -46,6 +46,17 @@ def init_db():
                 created_at TEXT    NOT NULL DEFAULT (datetime('now'))
             )
         ''')
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS categories (
+                id         INTEGER PRIMARY KEY,
+                name       TEXT    NOT NULL,
+                slug       TEXT    UNIQUE NOT NULL,
+                color      TEXT    NOT NULL DEFAULT '#6366f1',
+                icon       TEXT    NOT NULL DEFAULT '',
+                is_active  INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+            )
+        ''')
         db.executemany(
             'INSERT OR IGNORE INTO modes (slug, name) VALUES (?, ?)',
             _SEED_MODES,
@@ -103,3 +114,33 @@ def update_tag(tag_id, name, slug, color, icon):
 def set_tag_active(tag_id, is_active):
     with _connect() as db:
         db.execute('UPDATE tags SET is_active=? WHERE id=?', (is_active, tag_id))
+
+
+# Categories
+
+def get_categories():
+    with _connect() as db:
+        return db.execute(
+            'SELECT * FROM categories ORDER BY is_active DESC, name'
+        ).fetchall()
+
+
+def create_category(name, slug, color, icon):
+    with _connect() as db:
+        db.execute(
+            'INSERT INTO categories (name, slug, color, icon) VALUES (?, ?, ?, ?)',
+            (name, slug, color, icon),
+        )
+
+
+def update_category(category_id, name, slug, color, icon):
+    with _connect() as db:
+        db.execute(
+            'UPDATE categories SET name=?, slug=?, color=?, icon=? WHERE id=?',
+            (name, slug, color, icon, category_id),
+        )
+
+
+def set_category_active(category_id, is_active):
+    with _connect() as db:
+        db.execute('UPDATE categories SET is_active=? WHERE id=?', (is_active, category_id))

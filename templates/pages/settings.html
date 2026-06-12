@@ -15,8 +15,8 @@
 
 {# ── Tabs ── #}
 <div class="tab-bar" role="tablist">
-  <button class="tab-btn is-active" data-tab="tags" role="tab">Tags</button>
-  <button class="tab-btn" data-tab="categories" role="tab">Categories</button>
+  <button class="tab-btn is-active" data-tab="tags"       role="tab">Tags</button>
+  <button class="tab-btn"           data-tab="categories" role="tab">Categories</button>
 </div>
 
 {# ── Tags panel ── #}
@@ -24,8 +24,7 @@
   <div class="mb-4 flex justify-end">
     <button class="btn btn-primary" onclick="Tags.openAdd()">+ Add Tag</button>
   </div>
-
-  <table class="data-table" id="tags-table">
+  <table class="data-table">
     <thead>
       <tr>
         <th style="width:40px">Color</th>
@@ -33,7 +32,7 @@
         <th>Slug</th>
         <th>Icon</th>
         <th style="width:100px">Status</th>
-        <th style="width:100px"></th>
+        <th style="width:120px"></th>
       </tr>
     </thead>
     <tbody id="tags-body">
@@ -42,41 +41,86 @@
   </table>
 </div>
 
-{# ── Categories panel (placeholder) ── #}
+{# ── Categories panel ── #}
 <div id="tab-categories" class="tab-panel">
-  <p class="text-sm text-gray-400">Categories coming soon.</p>
+  <div class="mb-4 flex justify-end">
+    <button class="btn btn-primary" onclick="Categories.openAdd()">+ Add Category</button>
+  </div>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width:40px">Color</th>
+        <th>Name</th>
+        <th>Slug</th>
+        <th>Icon</th>
+        <th style="width:100px">Status</th>
+        <th style="width:120px"></th>
+      </tr>
+    </thead>
+    <tbody id="categories-body">
+      <tr><td colspan="6" class="text-center text-gray-400 py-6">Loading…</td></tr>
+    </tbody>
+  </table>
 </div>
 
-{# ── Modal ── #}
+{# ── Tag modal ── #}
 <div id="tag-modal" class="modal-backdrop" onclick="if(event.target===this) Tags.closeModal()">
   <div class="modal">
-    <h2 class="modal-title" id="modal-title">Add Tag</h2>
-
+    <h2 class="modal-title" id="tag-modal-title">Add Tag</h2>
     <div class="field">
-      <label class="field-label" for="f-name">Name</label>
-      <input id="f-name" class="field-input" placeholder="e.g. Urgent" />
+      <label class="field-label" for="t-name">Name</label>
+      <input id="t-name" class="field-input" placeholder="e.g. Urgent" />
     </div>
     <div class="field">
-      <label class="field-label" for="f-slug">Slug <span class="text-gray-400 normal-case font-normal">(auto)</span></label>
-      <input id="f-slug" class="field-input font-mono" placeholder="e.g. urgent" />
+      <label class="field-label" for="t-slug">Slug <span class="text-gray-400 normal-case font-normal">(auto)</span></label>
+      <input id="t-slug" class="field-input font-mono" placeholder="e.g. urgent" />
     </div>
     <div class="flex gap-4">
       <div class="field flex-1">
         <label class="field-label">Icon</label>
-        <div id="f-icon-picker"></div>
+        <div id="t-icon-picker"></div>
       </div>
       <div class="field">
-        <label class="field-label" for="f-color">Color</label>
-        <input id="f-color" type="color" value="#6366f1"
+        <label class="field-label" for="t-color">Color</label>
+        <input id="t-color" type="color" value="#6366f1"
                class="h-10 w-16 rounded-lg border border-gray-300 cursor-pointer p-1" />
       </div>
     </div>
-
-    <p id="modal-error" class="text-sm text-red-500 hidden"></p>
-
+    <p id="tag-modal-error" class="text-sm text-red-500 hidden"></p>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="Tags.closeModal()">Cancel</button>
       <button class="btn btn-primary" onclick="Tags.submit()">Save</button>
+    </div>
+  </div>
+</div>
+
+{# ── Category modal ── #}
+<div id="cat-modal" class="modal-backdrop" onclick="if(event.target===this) Categories.closeModal()">
+  <div class="modal">
+    <h2 class="modal-title" id="cat-modal-title">Add Category</h2>
+    <div class="field">
+      <label class="field-label" for="c-name">Name</label>
+      <input id="c-name" class="field-input" placeholder="e.g. Finance" />
+    </div>
+    <div class="field">
+      <label class="field-label" for="c-slug">Slug <span class="text-gray-400 normal-case font-normal">(auto)</span></label>
+      <input id="c-slug" class="field-input font-mono" placeholder="e.g. finance" />
+    </div>
+    <div class="flex gap-4">
+      <div class="field flex-1">
+        <label class="field-label">Icon</label>
+        <div id="c-icon-picker"></div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="c-color">Color</label>
+        <input id="c-color" type="color" value="#6366f1"
+               class="h-10 w-16 rounded-lg border border-gray-300 cursor-pointer p-1" />
+      </div>
+    </div>
+    <p id="cat-modal-error" class="text-sm text-red-500 hidden"></p>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="Categories.closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="Categories.submit()">Save</button>
     </div>
   </div>
 </div>
