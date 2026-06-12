@@ -26,6 +26,15 @@ def init_db():
                 name TEXT    NOT NULL
             )
         ''')
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS login (
+                id         INTEGER PRIMARY KEY,
+                username   TEXT    NOT NULL,
+                pin_hash   TEXT    NOT NULL,
+                is_active  INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+            )
+        ''')
         db.executemany(
             'INSERT OR IGNORE INTO modes (slug, name) VALUES (?, ?)',
             _SEED_MODES,
@@ -35,3 +44,19 @@ def init_db():
 def get_modes():
     with _connect() as db:
         return db.execute('SELECT slug, name FROM modes ORDER BY id').fetchall()
+
+
+def get_active_user():
+    with _connect() as db:
+        return db.execute(
+            'SELECT * FROM login WHERE is_active = 1 ORDER BY id DESC LIMIT 1'
+        ).fetchone()
+
+
+def create_user(username, pin_hash):
+    with _connect() as db:
+        db.execute('UPDATE login SET is_active = 0')
+        db.execute(
+            'INSERT INTO login (username, pin_hash, is_active) VALUES (?, ?, 1)',
+            (username, pin_hash),
+        )
