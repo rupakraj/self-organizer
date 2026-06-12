@@ -1,55 +1,32 @@
 import argparse
 import threading
 
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask
 
 from organizer import db
-
-app = Flask(__name__)
+from organizer.routes import bp
 
 HOST = '127.0.0.1'
 PORT = 5000
 
 
-# ── Inject modes into every template ─────────────────────────────────────────
-
-@app.context_processor
-def inject_modes():
-    return {'modes': db.get_modes()}
-
-
-# ── Routes ────────────────────────────────────────────────────────────────────
-
-@app.route('/')
-def index():
-    return redirect(url_for('overview'))
+def create_app():
+    app = Flask(__name__)
+    app.register_blueprint(bp)
+    return app
 
 
-@app.route('/overview')
-def overview():
-    return render_template('pages/overview.html')
+def run_web(host, port, debug=False):
+    app = create_app()
+    app.run(host=host, port=port, debug=debug)
 
 
-@app.route('/<mode>/')
-def mode_overview(mode):
-    modes = db.get_modes()
-    mode_obj = next((m for m in modes if m['slug'] == mode), None)
-    if mode_obj is None:
-        return redirect(url_for('overview'))
-    return render_template('pages/mode_overview.html', mode=mode, mode_obj=mode_obj)
-
-
-# ── Launch modes ──────────────────────────────────────────────────────────────
-
-def run_web():
-    app.run(host=HOST, port=PORT, debug=True)
-
-
-def run_native():
+def run_native(host, port, debug=False):
     import webview
 
+    app = create_app()
     server = threading.Thread(
-        target=lambda: app.run(host=HOST, port=PORT),
+        target=lambda: app.run(host=host, port=port, debug=debug),
         daemon=True,
     )
     server.start()
@@ -65,9 +42,16 @@ if __name__ == '__main__':
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--web',    action='store_true', help='Run in browser (default)')
     group.add_argument('--native', action='store_true', help='Run as native desktop window')
+    parser.add_argument('--debug',  default=True, help='Enable debug mode')
+    parser.add_argument('--host',   default=HOST, help='Host to bind the server to')
+    parser.add_argument('--port',   default=PORT, type=int, help='Port to bind the server to')
     args = parser.parse_args()
 
+    debug = args.debug
+    host = args.host
+    port = args.port
+
     if args.native:
-        run_native()
+        run_native(host, port, debug)
     else:
-        run_web()
+        run_web(host, port, debug)

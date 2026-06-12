@@ -13,7 +13,7 @@
 
 <div class="stat-grid">
   {% for m in modes %}
-  <a href="{{ url_for('mode_overview', mode=m.slug) }}" class="stat-card block hover:shadow-md transition-shadow">
+  <a href="{{ url_for('main.mode_overview', mode=m.slug) }}" class="stat-card block hover:shadow-md transition-shadow">
     <p class="stat-label">Mode</p>
     <p class="stat-value text-xl">{{ m.name }}</p>
     <p class="stat-note text-indigo-500 mt-2">Open →</p>

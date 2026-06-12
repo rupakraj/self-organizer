@@ -8,19 +8,19 @@
     </button>
 
     {% block topbar_brand %}
-    <a href="{{ url_for('overview') }}" class="topbar-title">Self Organizer</a>
+    <a href="{{ url_for('main.overview') }}" class="topbar-title">Self Organizer</a>
     {% endblock %}
   </div>
 
   <nav class="topbar-nav">
     {% block topbar_menu %}
     {# Modes are injected via context_processor — always available #}
-    <a href="{{ url_for('overview') }}"
+    <a href="{{ url_for('main.overview') }}"
        class="topbar-link {% if request.endpoint == 'overview' %}is-active{% endif %}">
       Overview
     </a>
     {% for m in modes %}
-    <a href="{{ url_for('mode_overview', mode=m.slug) }}"
+    <a href="{{ url_for('main.mode_overview', mode=m.slug) }}"
        class="topbar-link {% if request.view_args.get('mode') == m.slug %}is-active{% endif %}">
       {{ m.name }}
     </a>
