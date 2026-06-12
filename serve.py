@@ -4,6 +4,7 @@ import threading
 from flask import Flask
 
 from organizer import db
+from organizer.api import api_bp
 from organizer.routes import bp
 
 HOST = '127.0.0.1'
@@ -14,6 +15,7 @@ def create_app():
     app = Flask(__name__)
     app.secret_key = 'change-me-in-production'
     app.register_blueprint(bp)
+    app.register_blueprint(api_bp)
     return app
 
 

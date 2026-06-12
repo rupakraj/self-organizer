@@ -47,6 +47,12 @@ def overview():
     return render_template('pages/overview.html')
 
 
+@bp.route('/settings')
+@login_required
+def settings():
+    return render_template('pages/settings.html')
+
+
 @bp.route('/<mode>/')
 @login_required
 def mode_overview(mode):

@@ -1,0 +1,8 @@
+Tags: tag are index given to the entries (tag name, slug, color, icon)
+Categories: Categories are the way to group the entries (category name, slug, color, icon)
+Entries: Entries are the actual content (entry name, description, date, time, category, tags, history)
+History: History is the way to track the changes made to the entries (entry, change type, change date, change time, change description)
+
+Tasks: Task is trackable list of the entries with additional details
+Calendar: Entries tagged with date:time for calender entry
+

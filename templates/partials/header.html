@@ -77,6 +77,47 @@
     .task-name        { @apply text-sm text-gray-800; }
     .task-name.is-done { @apply line-through text-gray-400; }
 
+    /* === Settings tabs === */
+    .tab-bar          { @apply flex border-b border-gray-200 mb-6 gap-1; }
+    .tab-btn          { @apply px-4 py-2 text-sm font-medium text-gray-500 border-b-2 border-transparent -mb-px hover:text-gray-800 transition-colors; }
+    .tab-btn.is-active { @apply text-indigo-600 border-indigo-600; }
+    .tab-panel        { @apply hidden; }
+    .tab-panel.is-active { @apply block; }
+
+    /* === Data table === */
+    .data-table       { @apply w-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden; }
+    .data-table th    { @apply px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide bg-gray-50 border-b border-gray-200; }
+    .data-table td    { @apply px-4 py-3 text-sm text-gray-800 border-b border-gray-100; }
+    .data-table tr:last-child td { @apply border-b-0; }
+    .data-table tr.is-inactive td { @apply text-gray-400; }
+
+    /* === Modal === */
+    .modal-backdrop   { @apply fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden; }
+    .modal-backdrop.is-open { @apply flex; }
+    .modal            { @apply bg-white rounded-xl shadow-xl w-full max-w-md p-6 flex flex-col gap-5; }
+    .modal-title      { @apply text-base font-semibold text-gray-900; }
+    .modal-footer     { @apply flex justify-end gap-3 pt-2; }
+
+    /* === Form fields === */
+    .field            { @apply flex flex-col gap-1.5; }
+    .field-label      { @apply text-xs font-semibold text-gray-500 uppercase tracking-wide; }
+    .field-input      { @apply w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500; }
+    .btn-ghost        { @apply px-4 py-2 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-100 transition-colors; }
+    .btn-danger       { @apply px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-500 transition-colors; }
+
+    /* === Emoji picker === */
+    .ep-trigger       { @apply flex items-center gap-2 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer transition-colors; }
+    .ep-preview       { @apply text-xl leading-none; }
+    .ep-placeholder   { @apply text-gray-400; }
+    .ep-popover       { @apply absolute z-50 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl w-72 hidden; }
+    .ep-popover.is-open { @apply block; }
+    .ep-cats          { @apply flex gap-0.5 px-2 pt-2 border-b border-gray-100 pb-1; }
+    .ep-cat           { @apply px-2 py-1 text-xs rounded font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors cursor-pointer; }
+    .ep-cat.is-active { @apply text-indigo-600 bg-indigo-50; }
+    .ep-grid          { @apply grid grid-cols-8 gap-0.5 p-2 max-h-48 overflow-y-auto; }
+    .ep-emoji         { @apply text-xl text-center leading-none p-1 rounded hover:bg-gray-100 cursor-pointer transition-colors; }
+    .ep-clear         { @apply w-full text-xs text-gray-400 hover:text-red-500 py-1.5 border-t border-gray-100 transition-colors; }
+
     /* === Calendar === */
     .cal-card         { @apply bg-white rounded-xl shadow-sm border border-gray-200 p-5; }
     .cal-weekdays     { @apply grid grid-cols-7 mb-2; }

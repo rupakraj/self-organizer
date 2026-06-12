@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings — Self Organizer{% endblock %}
+
+{% block sidebar %}{% include 'partials/sidebar_overview.html' %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header-row">
+  <div>
+    <h1 class="page-title">Settings</h1>
+    <p class="page-subtitle">Manage tags, categories and more.</p>
+  </div>
+</div>
+
+{# ── Tabs ── #}
+<div class="tab-bar" role="tablist">
+  <button class="tab-btn is-active" data-tab="tags" role="tab">Tags</button>
+  <button class="tab-btn" data-tab="categories" role="tab">Categories</button>
+</div>
+
+{# ── Tags panel ── #}
+<div id="tab-tags" class="tab-panel is-active">
+  <div class="mb-4 flex justify-end">
+    <button class="btn btn-primary" onclick="Tags.openAdd()">+ Add Tag</button>
+  </div>
+
+  <table class="data-table" id="tags-table">
+    <thead>
+      <tr>
+        <th style="width:40px">Color</th>
+        <th>Name</th>
+        <th>Slug</th>
+        <th>Icon</th>
+        <th style="width:100px">Status</th>
+        <th style="width:100px"></th>
+      </tr>
+    </thead>
+    <tbody id="tags-body">
+      <tr><td colspan="6" class="text-center text-gray-400 py-6">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+{# ── Categories panel (placeholder) ── #}
+<div id="tab-categories" class="tab-panel">
+  <p class="text-sm text-gray-400">Categories coming soon.</p>
+</div>
+
+{# ── Modal ── #}
+<div id="tag-modal" class="modal-backdrop" onclick="if(event.target===this) Tags.closeModal()">
+  <div class="modal">
+    <h2 class="modal-title" id="modal-title">Add Tag</h2>
+
+    <div class="field">
+      <label class="field-label" for="f-name">Name</label>
+      <input id="f-name" class="field-input" placeholder="e.g. Urgent" />
+    </div>
+    <div class="field">
+      <label class="field-label" for="f-slug">Slug <span class="text-gray-400 normal-case font-normal">(auto)</span></label>
+      <input id="f-slug" class="field-input font-mono" placeholder="e.g. urgent" />
+    </div>
+    <div class="flex gap-4">
+      <div class="field flex-1">
+        <label class="field-label">Icon</label>
+        <div id="f-icon-picker"></div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="f-color">Color</label>
+        <input id="f-color" type="color" value="#6366f1"
+               class="h-10 w-16 rounded-lg border border-gray-300 cursor-pointer p-1" />
+      </div>
+    </div>
+
+    <p id="modal-error" class="text-sm text-red-500 hidden"></p>
+
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="Tags.closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="Tags.submit()">Save</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block footer_js %}
+<script src="{{ url_for('static', filename='js/emoji-picker.js') }}"></script>
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %}
