@@ -12,6 +12,7 @@ PORT = 5000
 
 def create_app():
     app = Flask(__name__)
+    app.secret_key = 'change-me-in-production'
     app.register_blueprint(bp)
     return app
 
