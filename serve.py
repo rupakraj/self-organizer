@@ -16,22 +16,20 @@ def create_app():
     return app
 
 
-def run_web(host, port, debug=False):
-    app = create_app()
-    app.run(host=host, port=port, debug=debug)
+def run_web(host, port, debug):
+    create_app().run(host=host, port=port, debug=debug)
 
 
-def run_native(host, port, debug=False):
+def run_native(host, port):
     import webview
 
-    app = create_app()
     server = threading.Thread(
-        target=lambda: app.run(host=host, port=port, debug=debug),
+        target=lambda: create_app().run(host=host, port=port),
         daemon=True,
     )
     server.start()
 
-    webview.create_window('Self Organizer', f'http://{HOST}:{PORT}')
+    webview.create_window('Self Organizer', f'http://{host}:{port}')
     webview.start()
 
 
@@ -42,16 +40,12 @@ if __name__ == '__main__':
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--web',    action='store_true', help='Run in browser (default)')
     group.add_argument('--native', action='store_true', help='Run as native desktop window')
-    parser.add_argument('--debug',  default=True, help='Enable debug mode')
-    parser.add_argument('--host',   default=HOST, help='Host to bind the server to')
-    parser.add_argument('--port',   default=PORT, type=int, help='Port to bind the server to')
+    parser.add_argument('--debug', action='store_true', help='Enable debug mode')
+    parser.add_argument('--host',  default=HOST,        help='Host to bind')
+    parser.add_argument('--port',  default=PORT,        type=int, help='Port to bind')
     args = parser.parse_args()
 
-    debug = args.debug
-    host = args.host
-    port = args.port
-
     if args.native:
-        run_native(host, port, debug)
+        run_native(args.host, args.port)
     else:
-        run_web(host, port, debug)
+        run_web(args.host, args.port, args.debug)
