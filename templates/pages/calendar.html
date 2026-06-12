@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Calendar — Self Organizer{% endblock %}
+
+{% block content %}
+
+{% set _events = {
+  12: ('Standup',   'blue'),
+  15: ('Q3 Review', 'yellow'),
+  20: ('Release',   'green')
+} %}
+
+<div class="page-header">
+  <h1 class="page-title">Calendar</h1>
+  <p class="page-subtitle">June 2026</p>
+</div>
+
+<div class="cal-card">
+  <div class="cal-weekdays">
+    {% for day in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] %}
+    <div class="cal-day-name">{{ day }}</div>
+    {% endfor %}
+  </div>
+
+  {# June 2026 starts on Monday — one leading blank (Sunday slot) #}
+  <div class="cal-grid">
+    <div class="cal-cell"></div>
+
+    {% for d in range(1, 31) %}
+    <div class="cal-cell {% if d == 12 %}is-today{% endif %}">
+      <span class="cal-date {% if d == 12 %}is-today{% endif %}">{{ d }}</span>
+      {% if d in _events %}
+        {% set label, color = _events[d] %}
+        <p class="cal-event cal-event--{{ color }}">{{ label }}</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+
+    {# Trailing cells to fill the 6-row grid (1 lead + 30 days = 31; need 42 total) #}
+    {% for _ in range(11) %}
+    <div class="cal-cell"></div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

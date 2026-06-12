@@ -1,0 +1,33 @@
+<header class="topbar">
+
+  <div class="topbar-brand">
+    <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="true">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+    </button>
+
+    {% block topbar_brand %}
+    <a href="{{ url_for('overview') }}" class="topbar-title">Self Organizer</a>
+    {% endblock %}
+  </div>
+
+  <nav class="topbar-nav">
+    {% block topbar_menu %}
+    {# Modes are injected via context_processor — always available #}
+    <a href="{{ url_for('overview') }}"
+       class="topbar-link {% if request.endpoint == 'overview' %}is-active{% endif %}">
+      Overview
+    </a>
+    {% for m in modes %}
+    <a href="{{ url_for('mode_overview', mode=m.slug) }}"
+       class="topbar-link {% if request.view_args.get('mode') == m.slug %}is-active{% endif %}">
+      {{ m.name }}
+    </a>
+    {% endfor %}
+    {% endblock %}
+
+    <div class="avatar">R</div>
+  </nav>
+
+</header>

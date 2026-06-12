@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ mode_obj.name }} — Self Organizer{% endblock %}
+
+{% block sidebar %}{% include 'partials/sidebar_mode.html' %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1 class="page-title">{{ mode_obj.name }}</h1>
+  <p class="page-subtitle">Mode overview — content coming soon.</p>
+</div>
+
+<div class="stat-grid">
+  {% for label in ['Tasks', 'Bookmarks', 'Calendar', 'Notes'] %}
+  <div class="stat-card">
+    <p class="stat-label">{{ label }}</p>
+    <p class="stat-value text-2xl text-gray-400">—</p>
+    <p class="stat-note text-gray-400">Placeholder</p>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

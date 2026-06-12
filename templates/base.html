@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Self Organizer{% endblock %}</title>
+
+  {% include 'partials/header.html' %}
+
+  {# ── Hookpoint: per-page stylesheets ── #}
+  {% block head_css %}{% endblock %}
+
+  {# ── Hookpoint: scripts that must load in <head> ── #}
+  {% block head_js %}{% endblock %}
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col h-screen overflow-hidden">
+
+  {# ── Top bar ── #}
+  {% include 'partials/topbar.html' %}
+
+  {# ── Body row ── #}
+  <div class="flex flex-1 overflow-hidden">
+    {% block sidebar %}{% include 'partials/sidebar.html' %}{% endblock %}
+
+    <main id="main-content" class="flex-1 overflow-y-auto p-6 bg-gray-100">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  {# ── Base scripts ── #}
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+  {# ── Hookpoint: per-page scripts ── #}
+  {% block footer_js %}{% endblock %}
+
+</body>
+</html>

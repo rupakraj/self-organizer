@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Overview — Self Organizer{% endblock %}
+
+{% block sidebar %}{% include 'partials/sidebar_overview.html' %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1 class="page-title">Overview</h1>
+  <p class="page-subtitle">Select a mode to get started.</p>
+</div>
+
+<div class="stat-grid">
+  {% for m in modes %}
+  <a href="{{ url_for('mode_overview', mode=m.slug) }}" class="stat-card block hover:shadow-md transition-shadow">
+    <p class="stat-label">Mode</p>
+    <p class="stat-value text-xl">{{ m.name }}</p>
+    <p class="stat-note text-indigo-500 mt-2">Open →</p>
+  </a>
+  {% endfor %}
+</div>
+
+{% endblock %}

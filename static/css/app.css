@@ -1,0 +1,36 @@
+/* ============================================================
+   Design tokens
+   ============================================================ */
+:root {
+  --sidebar-width: 240px;
+  --sidebar-collapsed-width: 56px;
+  --topbar-height: 56px;
+}
+
+/* ============================================================
+   Sidebar collapse — ID-scoped, not expressible via @apply
+   ============================================================ */
+#sidebar {
+  width: var(--sidebar-width);
+  transition: width 0.25s ease;
+  overflow: hidden;
+}
+
+#sidebar.sidebar-collapsed {
+  width: var(--sidebar-collapsed-width);
+}
+
+/* .nav-label and .sidebar-header-text are behavioral hooks
+   toggled by dashboard.js via the sidebar-collapsed class */
+#sidebar.sidebar-collapsed .nav-label,
+#sidebar.sidebar-collapsed .sidebar-header-text {
+  display: none;
+}
+
+.nav-label {
+  white-space: nowrap;
+}
+
+.sidebar-header-text {
+  white-space: nowrap;
+}

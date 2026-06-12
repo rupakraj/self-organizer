@@ -1,0 +1,98 @@
+{# ── CDN — must come before the component style block ── #}
+<script src="https://cdn.tailwindcss.com"></script>
+
+{# ── Component layer — @apply is processed by the CDN at runtime ── #}
+<style type="text/tailwindcss">
+  @layer components {
+
+    /* === Topbar === */
+    .topbar           { @apply h-14 bg-gray-900 text-white flex items-center justify-between px-4 flex-shrink-0 shadow-md z-10; }
+    .topbar-brand     { @apply flex items-center gap-3; }
+    .topbar-title     { @apply font-semibold text-base tracking-wide; }
+    .topbar-nav       { @apply flex items-center gap-1; }
+    .topbar-link      { @apply px-3 py-1.5 rounded text-sm text-gray-300 hover:text-white hover:bg-gray-700 transition-colors; }
+    .topbar-link.is-active { @apply text-white bg-gray-700; }
+    .sidebar-toggle   { @apply p-1.5 rounded hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500; }
+    .avatar           { @apply ml-2 w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-sm font-semibold cursor-pointer hover:bg-indigo-400 transition-colors select-none; }
+
+    /* === Sidebar === */
+    .sidebar          { @apply bg-gray-800 text-gray-200 flex flex-col flex-shrink-0 border-r border-gray-700; }
+    .sidebar-header   { @apply px-3 py-4 border-b border-gray-700 flex items-center gap-2; }
+    .sidebar-header-icon { @apply w-5 h-5 flex-shrink-0 text-indigo-400; }
+    .sidebar-header-text { @apply text-sm font-semibold text-gray-300; }
+    .sidebar-nav      { @apply flex-1 py-3 overflow-y-auto space-y-0.5 px-2; }
+    .sidebar-section  { @apply pt-4 pb-1 px-2; }
+    .sidebar-section-label { @apply text-xs font-semibold text-gray-500 uppercase tracking-wider; }
+
+    /* === Nav links === */
+    .nav-link         { @apply flex items-center gap-3 px-2 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-700 transition-colors; }
+    .nav-link.is-active { @apply bg-indigo-600 text-white font-medium hover:bg-gray-700/0; }
+    .nav-icon         { @apply w-5 h-5 flex-shrink-0; }
+
+    /* === Page structure === */
+    .page-header      { @apply mb-6; }
+    .page-header-row  { @apply mb-6 flex items-center justify-between; }
+    .page-title       { @apply text-2xl font-bold text-gray-900; }
+    .page-subtitle    { @apply text-sm text-gray-500 mt-1; }
+
+    /* === Stat cards === */
+    .stat-grid        { @apply grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6; }
+    .stat-card        { @apply bg-white rounded-xl p-5 shadow-sm border border-gray-200; }
+    .stat-label       { @apply text-xs font-semibold text-gray-400 uppercase tracking-wide; }
+    .stat-value       { @apply text-3xl font-bold text-gray-900 mt-1; }
+    .stat-note        { @apply text-xs mt-1; }
+    .stat-note--up    { @apply text-green-500; }
+    .stat-note--warn  { @apply text-yellow-500; }
+    .stat-note--down  { @apply text-red-500; }
+
+    /* === Activity panel === */
+    .activity-panel   { @apply bg-white rounded-xl shadow-sm border border-gray-200 p-5; }
+    .activity-title   { @apply text-sm font-semibold text-gray-700 mb-4; }
+    .activity-list    { @apply divide-y divide-gray-100; }
+    .activity-item    { @apply py-3 flex items-start gap-3; }
+    .activity-dot     { @apply mt-0.5 w-2 h-2 rounded-full flex-shrink-0; }
+    .activity-dot--blue   { @apply bg-indigo-500; }
+    .activity-dot--green  { @apply bg-green-500; }
+    .activity-dot--yellow { @apply bg-yellow-400; }
+    .activity-dot--red    { @apply bg-red-400; }
+    .activity-text    { @apply text-sm text-gray-800; }
+    .activity-time    { @apply text-xs text-gray-400 mt-0.5; }
+
+    /* === Buttons === */
+    .btn              { @apply px-4 py-2 text-sm font-medium rounded-lg transition-colors; }
+    .btn-primary      { @apply bg-indigo-600 text-white hover:bg-indigo-500; }
+
+    /* === Badges === */
+    .badge            { @apply text-xs font-semibold px-2.5 py-1 rounded-full; }
+    .badge--done      { @apply bg-green-100 text-green-700; }
+    .badge--active    { @apply bg-yellow-100 text-yellow-700; }
+    .badge--overdue   { @apply bg-red-100 text-red-700; }
+    .badge--todo      { @apply bg-gray-100 text-gray-600; }
+
+    /* === Task list === */
+    .task-list        { @apply bg-white rounded-xl shadow-sm border border-gray-200 divide-y divide-gray-100; }
+    .task-row         { @apply flex items-center justify-between px-5 py-4; }
+    .task-check       { @apply flex items-center gap-3; }
+    .task-checkbox    { @apply w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500; }
+    .task-name        { @apply text-sm text-gray-800; }
+    .task-name.is-done { @apply line-through text-gray-400; }
+
+    /* === Calendar === */
+    .cal-card         { @apply bg-white rounded-xl shadow-sm border border-gray-200 p-5; }
+    .cal-weekdays     { @apply grid grid-cols-7 mb-2; }
+    .cal-day-name     { @apply text-center text-xs font-semibold text-gray-400 uppercase py-2; }
+    .cal-grid         { @apply grid grid-cols-7 gap-px bg-gray-100 border border-gray-100 rounded-lg overflow-hidden; }
+    .cal-cell         { @apply bg-white p-1.5; min-height: 80px; }
+    .cal-cell.is-today { @apply ring-2 ring-inset ring-indigo-500; }
+    .cal-date         { @apply text-xs font-medium text-gray-500; }
+    .cal-date.is-today { @apply flex items-center justify-center w-5 h-5 rounded-full bg-indigo-600 text-white; }
+    .cal-event        { @apply mt-1 text-xs rounded px-1 py-0.5 truncate; }
+    .cal-event--blue  { @apply bg-indigo-50 text-indigo-700; }
+    .cal-event--yellow { @apply bg-yellow-50 text-yellow-700; }
+    .cal-event--green { @apply bg-green-50 text-green-700; }
+
+  }
+</style>
+
+{# ── Sidebar collapse behavior — plain CSS, references #sidebar by ID ── #}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">

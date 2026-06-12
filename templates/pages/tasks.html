@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Tasks — Self Organizer{% endblock %}
+
+{% block content %}
+
+{% set badge_map = {
+  'Completed':   'done',
+  'In Progress': 'active',
+  'Overdue':     'overdue',
+  'Todo':        'todo'
+} %}
+
+<div class="page-header-row">
+  <div>
+    <h1 class="page-title">Tasks</h1>
+    <p class="page-subtitle">Manage and track your work.</p>
+  </div>
+  <button class="btn btn-primary">+ New Task</button>
+</div>
+
+<div class="task-list">
+  {% set _tasks = [
+    ('Design system update', 'Completed'),
+    ('Q3 planning session',  'In Progress'),
+    ('API integration',      'Overdue'),
+    ('Write release notes',  'Todo'),
+    ('Review pull requests', 'Todo')
+  ] %}
+
+  {% for name, status in _tasks %}
+  <div class="task-row">
+    <div class="task-check">
+      <input type="checkbox" class="task-checkbox" {% if status == 'Completed' %}checked{% endif %}>
+      <span class="task-name {% if status == 'Completed' %}is-done{% endif %}">{{ name }}</span>
+    </div>
+    <span class="badge badge--{{ badge_map[status] }}">{{ status }}</span>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}
