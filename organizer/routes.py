@@ -7,8 +7,11 @@ bp = Blueprint('main', __name__)
 
 
 @bp.context_processor
-def inject_modes():
-    return {'modes': db.get_modes()}
+def inject_globals():
+    return {
+        'modes':        db.get_modes(),
+        'current_user': db.get_active_user(),
+    }
 
 
 # Auth

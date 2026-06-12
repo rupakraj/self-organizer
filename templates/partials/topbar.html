@@ -8,15 +8,19 @@
     </button>
 
     {% block topbar_brand %}
-    <a href="{{ url_for('main.overview') }}" class="topbar-title">Self Organizer</a>
+    <a href="{{ url_for('main.overview') }}" class="topbar-title">
+      Self Organizer
+      {% if current_user %}
+      <span class="text-gray-400 font-normal">({{ current_user.username }})</span>
+      {% endif %}
+    </a>
     {% endblock %}
   </div>
 
   <nav class="topbar-nav">
     {% block topbar_menu %}
-    {# Modes are injected via context_processor — always available #}
     <a href="{{ url_for('main.overview') }}"
-       class="topbar-link {% if request.endpoint == 'overview' %}is-active{% endif %}">
+       class="topbar-link {% if request.endpoint == 'main.overview' %}is-active{% endif %}">
       Overview
     </a>
     {% for m in modes %}
@@ -27,7 +31,7 @@
     {% endfor %}
     {% endblock %}
 
-    <div class="avatar">R</div>
+    <div class="avatar">{{ current_user.username[0].upper() if current_user else '?' }}</div>
   </nav>
 
 </header>
