@@ -3,7 +3,7 @@ import os
 from rich.text import Text
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen, Screen
-from textual.widgets import ContentSwitcher, DataTable, Input, OptionList, Static
+from textual.widgets import ContentSwitcher, DataTable, Input, Markdown, OptionList, SelectionList, Static
 
 from utils import db
 
@@ -12,21 +12,15 @@ def entry_label(n):
     return f"{n} entr{'y' if n == 1 else 'ies'}"
 
 
-def category_cell(entry):
-    if not entry['category_name']:
-        return ''
-    return Text.assemble(('● ', entry['category_color'] or ''), entry['category_name'])
-
-
 def entry_detail(entry, tags):
-    lines = [Text(entry['name'], 'bold')]
+    lines = [f"# {entry['name']}"]
     meta = ' · '.join(v for v in (entry['entry_date'], entry['category_name']) if v)
     if meta:
-        lines.append(Text(meta, 'dim'))
+        lines.append(f'*{meta}*')
     if tags:
-        lines.append(Text('  ').join(Text(f"{t['icon']} {t['name']}".strip(), t['color']) for t in tags))
-    lines += [Text(''), Text(entry['description'] or 'No description.')]
-    return Text('\n').join(lines)
+        lines.append('  '.join(f"`{t['icon']} {t['name']}".strip() + '`' for t in tags))
+    lines.append(entry['description'] or '*No description.*')
+    return '\n\n'.join(lines)
 
 
 COMMANDS = ['change-category', 'reload', 'lock', 'quit']
@@ -52,6 +46,10 @@ class CategoryPicker(ModalScreen):
 class DashboardScreen(Screen):
     BINDINGS = [
         ('colon', 'open_command', 'Command'),
+        ('1', 'focus_panel("tag-filter")', 'Tags'),
+        ('2', 'focus_panel("entries")', 'Entries'),
+        ('j', 'move(1)', 'Down'),
+        ('k', 'move(-1)', 'Up'),
         ('r', 'reload', 'Refresh'),
         ('l', 'app.lock', 'Lock'),
         ('q', 'app.quit', 'Quit'),
@@ -65,27 +63,39 @@ class DashboardScreen(Screen):
 
     def compose(self):
         yield Static(id='breadcrumb')
-        with Vertical(id='main-pane'):
-            yield Static(id='page-title')
-            with ContentSwitcher(initial='overview', id='switcher'):
-                with Horizontal(id='overview'):
-                    for _ in self.pages[1:]:
-                        yield Static(classes='card')
-                with Vertical(id='mode-view'):
+        with ContentSwitcher(initial='overview', id='switcher'):
+            with Horizontal(id='overview'):
+                for _ in self.pages[1:]:
+                    yield Static(classes='card')
+            with Horizontal(id='mode-view'):
+                with Vertical(id='left-column'):
+                    yield SelectionList(id='tag-filter')
                     yield DataTable(id='entries', cursor_type='row')
-                    with VerticalScroll(id='detail-pane'):
-                        yield Static(id='detail')
+                with VerticalScroll(id='detail-pane'):
+                    yield Markdown(id='detail')
         yield Static(id='completions')
         yield Static(id='modeline')
         with Horizontal(id='command-row'):
-            yield Input(id='command', placeholder='Press : for commands')
+            yield Input(id='command', placeholder='Focus: 1 2 | Move: j k | Toggle tag: space | Command: : | Refresh: r | Lock: l | Quit: q')
             yield Static(id='command-category')
 
     def on_mount(self):
-        self.query_one('#entries', DataTable).add_columns('Name', 'Category', 'Date', 'Created')
-        self.query_one('#detail-pane').border_title = 'Details'
+        self.query_one('#entries', DataTable).add_columns('Name', 'Date')
+        self.query_one('#detail-pane').border_title = '[0]─Details'
+        self.query_one('#tag-filter').border_title = '[1]─Tags'
+        self.query_one('#entries').border_title = '[2]─Entries'
+        self.shown_slug = None
         self.active_user = db.get_active_user()
         self.show_page(*self.current_page)
+
+    def action_focus_panel(self, panel_id):
+        if self.current_page[0] is not None:
+            self.query_one(f'#{panel_id}').focus()
+
+    def action_move(self, step):
+        panel = self.focused
+        if isinstance(panel, (DataTable, SelectionList)):
+            panel.action_cursor_down() if step > 0 else panel.action_cursor_up()
 
     def action_open_command(self):
         command = self.query_one('#command', Input)
@@ -165,10 +175,15 @@ class DashboardScreen(Screen):
         if index is not None:
             self.show_page(*self.pages[index])
 
+    def on_selection_list_selection_highlighted(self, event):
+        count = event.selection_list.option_count
+        event.selection_list.border_subtitle = f'{event.selection_index + 1} of {count}' if count else ''
+
     def on_data_table_row_highlighted(self, event):
+        event.data_table.border_subtitle = f'{event.cursor_row + 1} of {event.data_table.row_count}'
         entry, tags = db.get_entry(int(event.row_key.value))
         if entry:
-            self.query_one('#detail', Static).update(entry_detail(entry, tags))
+            self.query_one('#detail', Markdown).update(entry_detail(entry, tags))
 
     def action_reload(self):
         self.show_page(*self.current_page)
@@ -189,27 +204,42 @@ class DashboardScreen(Screen):
             total += entry_count
             card.border_title = name
             card.update(entry_label(entry_count))
-        self.query_one('#page-title', Static).update(f'Overview · {entry_label(total)}')
         self.update_modeline('Overview', entry_label(total))
         self.query_one('#switcher', ContentSwitcher).current = 'overview'
 
     def show_mode(self, slug, name):
-        entries = db.get_entries(slug)
+        tag_filter = self.query_one('#tag-filter', SelectionList)
+        # Keep the selection on refresh, drop it when switching category
+        selected = set(tag_filter.selected) if slug == self.shown_slug else set()
+        self.shown_slug = slug
+        tags = db.get_mode_tags(slug)
+        tag_filter.clear_options()
+        tag_filter.add_options([
+            (Text(f"{t['icon']} {t['name']}".strip(), t['color']), t['id'], t['id'] in selected)
+            for t in tags
+        ])
+        self.show_entries()
+        self.query_one('#switcher', ContentSwitcher).current = 'mode-view'
+
+    def on_selection_list_selected_changed(self, event):
+        self.show_entries()
+
+    def show_entries(self):
+        slug, name = self.current_page
+        entries = db.get_entries(slug, self.query_one('#tag-filter', SelectionList).selected)
         entries_table = self.query_one('#entries', DataTable)
         entries_table.clear()
+        if not entries:
+            entries_table.border_subtitle = ''
         for e in entries:
             entries_table.add_row(
                 Text(e['name']),
-                category_cell(e),
                 e['entry_date'] or '',
-                e['created_at'][:10],
                 key=str(e['id']),
             )
-        detail = entry_detail(*db.get_entry(entries[0]['id'])) if entries else 'No entries yet.'
-        self.query_one('#detail', Static).update(detail)
-        self.query_one('#page-title', Static).update(f'{name} · {entry_label(len(entries))}')
+        detail = entry_detail(*db.get_entry(entries[0]['id'])) if entries else '*No entries yet.*'
+        self.query_one('#detail', Markdown).update(detail)
         self.update_modeline(name, entry_label(len(entries)))
-        self.query_one('#switcher', ContentSwitcher).current = 'mode-view'
 
     def update_modeline(self, name, count):
         username = self.active_user['username'] if self.active_user else '-'

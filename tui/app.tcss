@@ -29,11 +29,6 @@ LoginScreen {
     text-style: bold;
 }
 
-#main-pane {
-    height: 1fr;
-    padding: 0 1;
-}
-
 #modeline {
     height: 1;
     background: $panel;
@@ -77,11 +72,6 @@ CategoryPicker {
     border: round $primary;
 }
 
-#page-title {
-    padding: 1 0;
-    text-style: bold;
-}
-
 #switcher {
     height: 1fr;
 }
@@ -95,19 +85,58 @@ CategoryPicker {
     height: 5;
     padding: 1 2;
     margin-right: 1;
-    border: round $primary;
+    border: round $panel-lighten-2;
 }
 
 #mode-view {
     height: 1fr;
 }
 
-#entries {
+#left-column {
+    width: 45;
+}
+
+#tag-filter {
     height: 1fr;
+    border: round $panel-lighten-2;
+    border-subtitle-align: right;
+    background: $background;
+}
+
+#entries {
+    height: 2fr;
+    border: round $panel-lighten-2;
+    border-subtitle-align: right;
+    background: $background;
 }
 
 #detail-pane {
-    height: 12;
+    width: 1fr;
+    height: 1fr;
     padding: 0 1;
-    border: round $primary;
+    border: round $panel-lighten-2;
+}
+
+#tag-filter:focus, #entries:focus {
+    border: round $success;
+    border-title-color: $success;
+    border-title-style: bold;
+}
+
+#tag-filter:focus > .option-list--option-highlighted, #tag-filter > .option-list--option-highlighted {
+    background: $primary;
+}
+
+#entries > .datatable--cursor {
+    background: $primary;
+}
+
+#entries:focus > .datatable--cursor {
+    background: $primary;
+    text-style: bold;
+}
+
+#detail {
+    margin: 0;
+    padding: 0;
 }

@@ -167,14 +167,30 @@ def set_category_active(category_id, is_active):
 
 # Entries
 
-def get_entries(mode_slug):
+def get_entries(mode_slug, tag_ids=()):
+    placeholders = ', '.join('?' * len(tag_ids))
+    # An entry must carry every selected tag
+    tag_filter = f'''AND (SELECT COUNT(DISTINCT et.tag_id) FROM entry_tags et
+                         WHERE et.entry_id = e.id AND et.tag_id IN ({placeholders})) = ?''' if tag_ids else ''
     with _connect() as db:
         return db.execute(
-            '''SELECT e.*, c.name AS category_name, c.color AS category_color
+            f'''SELECT e.*, c.name AS category_name, c.color AS category_color
                FROM entries e
                LEFT JOIN categories c ON c.id = e.category_id
-               WHERE e.mode_slug = ? AND e.is_active = 1
+               WHERE e.mode_slug = ? AND e.is_active = 1 {tag_filter}
                ORDER BY e.created_at DESC''',
+            (mode_slug, *tag_ids, *([len(tag_ids)] if tag_ids else [])),
+        ).fetchall()
+
+
+def get_mode_tags(mode_slug):
+    with _connect() as db:
+        return db.execute(
+            '''SELECT DISTINCT t.* FROM tags t
+               JOIN entry_tags et ON et.tag_id = t.id
+               JOIN entries e ON e.id = et.entry_id
+               WHERE e.mode_slug = ? AND e.is_active = 1
+               ORDER BY t.name''',
             (mode_slug,),
         ).fetchall()
 
