@@ -29,5 +29,10 @@ python admin.py --create_user
 __Run__
 ```
 python run.py web    # browser (add --native for a desktop window, --debug, --host, --port)
-python run.py tui    # terminal dashboard
+python run.py tui    # terminal dashboard (add --dev to skip login)
+```
+
+`--dev` reads the PIN from a `.env` file in the project root:
+```
+DEV_PIN=1234
 ```

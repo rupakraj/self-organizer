@@ -1,6 +1,17 @@
 import argparse
+import sys
+from pathlib import Path
 
 from utils import db
+
+ENV_PATH = Path(__file__).parent / '.env'
+
+
+def read_env():
+    if not ENV_PATH.exists():
+        return {}
+    pairs = (line.split('=', 1) for line in ENV_PATH.read_text().splitlines() if '=' in line and not line.lstrip().startswith('#'))
+    return {key.strip(): value.strip().strip('"\'') for key, value in pairs}
 
 
 def run_web(args):
@@ -15,7 +26,12 @@ def run_web(args):
 def run_tui(args):
     from tui.app import OrganizerApp
 
-    OrganizerApp().run()
+    dev_pin = None
+    if args.dev:
+        dev_pin = read_env().get('DEV_PIN')
+        if not dev_pin:
+            sys.exit(f'--dev needs DEV_PIN set in {ENV_PATH}')
+    OrganizerApp(dev_pin).run()
 
 
 if __name__ == '__main__':
@@ -30,6 +46,7 @@ if __name__ == '__main__':
     web.set_defaults(run=run_web)
 
     tui = modes.add_parser('tui', help='Run the terminal dashboard')
+    tui.add_argument('--dev', action='store_true', help='Skip login using DEV_PIN from .env')
     tui.set_defaults(run=run_tui)
 
     args = parser.parse_args()
