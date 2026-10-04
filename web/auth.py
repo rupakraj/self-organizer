@@ -1,16 +1,6 @@
 from functools import wraps
 
 from flask import redirect, session, url_for
-from werkzeug.security import check_password_hash
-
-from organizer import db
-
-
-def check_pin(pin):
-    user = db.get_active_user()
-    if user is None:
-        return False
-    return check_password_hash(user['pin_hash'], pin)
 
 
 def login_required(f):

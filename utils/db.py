@@ -57,6 +57,25 @@ def init_db():
                 created_at TEXT    NOT NULL DEFAULT (datetime('now'))
             )
         ''')
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS entries (
+                id          INTEGER PRIMARY KEY,
+                mode_slug   TEXT    NOT NULL,
+                category_id INTEGER REFERENCES categories(id),
+                name        TEXT    NOT NULL,
+                description TEXT    NOT NULL DEFAULT '',
+                entry_date  TEXT,
+                is_active   INTEGER NOT NULL DEFAULT 1,
+                created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+            )
+        ''')
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS entry_tags (
+                entry_id INTEGER NOT NULL REFERENCES entries(id),
+                tag_id   INTEGER NOT NULL REFERENCES tags(id),
+                PRIMARY KEY (entry_id, tag_id)
+            )
+        ''')
         db.executemany(
             'INSERT OR IGNORE INTO modes (slug, name) VALUES (?, ?)',
             _SEED_MODES,
@@ -144,3 +163,63 @@ def update_category(category_id, name, slug, color, icon):
 def set_category_active(category_id, is_active):
     with _connect() as db:
         db.execute('UPDATE categories SET is_active=? WHERE id=?', (is_active, category_id))
+
+
+# Entries
+
+def get_entries(mode_slug):
+    with _connect() as db:
+        return db.execute(
+            '''SELECT e.*, c.name AS category_name, c.color AS category_color
+               FROM entries e
+               LEFT JOIN categories c ON c.id = e.category_id
+               WHERE e.mode_slug = ? AND e.is_active = 1
+               ORDER BY e.created_at DESC''',
+            (mode_slug,),
+        ).fetchall()
+
+
+def get_entry(entry_id):
+    with _connect() as db:
+        entry = db.execute(
+            '''SELECT e.*, c.name AS category_name
+               FROM entries e
+               LEFT JOIN categories c ON c.id = e.category_id
+               WHERE e.id = ?''',
+            (entry_id,),
+        ).fetchone()
+        if entry is None:
+            return None, []
+        tags = db.execute(
+            '''SELECT t.* FROM tags t
+               JOIN entry_tags et ON et.tag_id = t.id
+               WHERE et.entry_id = ?''',
+            (entry_id,),
+        ).fetchall()
+        return entry, tags
+
+
+def create_entry(mode_slug, name, description, entry_date, category_id, tag_ids):
+    with _connect() as db:
+        cur = db.execute(
+            'INSERT INTO entries (mode_slug, name, description, entry_date, category_id) VALUES (?, ?, ?, ?, ?)',
+            (mode_slug, name, description, entry_date or None, category_id or None),
+        )
+        entry_id = cur.lastrowid
+        if tag_ids:
+            db.executemany(
+                'INSERT OR IGNORE INTO entry_tags (entry_id, tag_id) VALUES (?, ?)',
+                [(entry_id, tid) for tid in tag_ids],
+            )
+        return entry_id
+
+
+def update_entry_name(entry_id, name):
+    with _connect() as db:
+        db.execute('UPDATE entries SET name=? WHERE id=?', (name, entry_id))
+
+
+def get_entry_tag_ids(entry_id):
+    with _connect() as db:
+        rows = db.execute('SELECT tag_id FROM entry_tags WHERE entry_id = ?', (entry_id,)).fetchall()
+        return [r['tag_id'] for r in rows]

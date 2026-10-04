@@ -1,0 +1,108 @@
+from flask import Blueprint, render_template, redirect, request, session, url_for
+
+from utils import db
+from utils.auth import check_pin
+from web.auth import login_required
+
+bp = Blueprint('main', __name__)
+
+
+@bp.context_processor
+def inject_globals():
+    return {
+        'modes':        db.get_modes(),
+        'current_user': db.get_active_user(),
+    }
+
+
+# Auth
+
+@bp.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'POST':
+        if check_pin(request.form.get('pin', '')):
+            session['authenticated'] = True
+            return redirect(url_for('main.overview'))
+        error = 'Invalid PIN.'
+    return render_template('pages/login.html', error=error)
+
+
+@bp.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('main.login'))
+
+
+# App routes
+
+@bp.route('/')
+@login_required
+def index():
+    return redirect(url_for('main.overview'))
+
+
+@bp.route('/overview')
+@login_required
+def overview():
+    return render_template('pages/overview.html')
+
+
+@bp.route('/settings')
+@login_required
+def settings():
+    return render_template('pages/settings.html')
+
+
+@bp.route('/<mode>/')
+@login_required
+def mode_overview(mode):
+    modes = db.get_modes()
+    mode_obj = next((m for m in modes if m['slug'] == mode), None)
+    if mode_obj is None:
+        return redirect(url_for('main.overview'))
+    entries = db.get_entries(mode)
+    return render_template('pages/mode_overview.html', mode=mode, mode_obj=mode_obj, entries=entries)
+
+
+@bp.route('/<mode>/entries/<int:entry_id>')
+@login_required
+def entry_detail(mode, entry_id):
+    modes = db.get_modes()
+    mode_obj = next((m for m in modes if m['slug'] == mode), None)
+    if mode_obj is None:
+        return redirect(url_for('main.overview'))
+    entry, tags = db.get_entry(entry_id)
+    if entry is None or entry['mode_slug'] != mode:
+        return redirect(url_for('main.mode_overview', mode=mode))
+    return render_template('pages/entry_detail.html',
+                           mode=mode, mode_obj=mode_obj,
+                           entry=entry, tags=tags)
+
+
+@bp.route('/<mode>/entries/new', methods=['GET', 'POST'])
+@login_required
+def new_entry(mode):
+    modes = db.get_modes()
+    mode_obj = next((m for m in modes if m['slug'] == mode), None)
+    if mode_obj is None:
+        return redirect(url_for('main.overview'))
+
+    if request.method == 'POST':
+        name        = request.form.get('name', '').strip()
+        description = request.form.get('description', '').strip()
+        entry_date  = request.form.get('entry_date', '').strip() or None
+        category_id = request.form.get('category_id') or None
+        tag_ids     = [int(t) for t in request.form.getlist('tag_ids') if t.isdigit()]
+
+        if name:
+            db.create_entry(mode, name, description, entry_date, category_id, tag_ids)
+            return redirect(url_for('main.mode_overview', mode=mode))
+
+    categories = db.get_categories()
+    tags       = db.get_tags()
+    active_categories = [c for c in categories if c['is_active']]
+    active_tags       = [t for t in tags       if t['is_active']]
+    return render_template('pages/new_entry.html',
+                           mode=mode, mode_obj=mode_obj,
+                           categories=active_categories, tags=active_tags)

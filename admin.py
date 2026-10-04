@@ -3,7 +3,7 @@ import getpass
 
 from werkzeug.security import generate_password_hash
 
-from organizer import db
+from utils import db
 
 
 def cmd_create_user():

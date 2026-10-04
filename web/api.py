@@ -2,8 +2,8 @@ import re
 
 from flask import Blueprint, jsonify, request
 
-from organizer import db
-from organizer.auth import login_required
+from utils import db
+from web.auth import login_required
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -66,6 +66,19 @@ def delete_tag(tag_id):
 @login_required
 def restore_tag(tag_id):
     db.set_tag_active(tag_id, 1)
+    return jsonify({'ok': True})
+
+
+# Entries
+
+@api_bp.patch('/entries/<int:entry_id>')
+@login_required
+def patch_entry(entry_id):
+    data = request.get_json(silent=True) or {}
+    name = (data.get('name') or '').strip()
+    if not name:
+        return jsonify({'error': 'Name is required.'}), 400
+    db.update_entry_name(entry_id, name)
     return jsonify({'ok': True})
 
 

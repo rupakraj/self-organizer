@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}New Entry — {{ mode_obj.name }}{% endblock %}
+
+{% block sidebar %}{% include 'partials/sidebar_mode.html' %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header-row">
+  <div>
+    <a href="{{ url_for('main.mode_overview', mode=mode) }}"
+       class="text-xs text-gray-400 hover:text-gray-600 mb-1 inline-block">← {{ mode_obj.name }}</a>
+    <h1 class="page-title">New Entry</h1>
+  </div>
+</div>
+
+<form method="post" class="max-w-2xl flex flex-col gap-6">
+
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-col gap-5">
+
+    <div class="field">
+      <label class="field-label" for="name">Name <span class="text-red-400">*</span></label>
+      <input id="name" name="name" class="field-input" placeholder="Entry title" required autofocus />
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="description">Description</label>
+      <textarea id="description" name="description" rows="4"
+                class="field-input resize-none" placeholder="Optional details…"></textarea>
+    </div>
+
+    <div class="flex gap-4">
+
+      <div class="field flex-1">
+        <label class="field-label" for="category_id">Category</label>
+        <select id="category_id" name="category_id" class="field-input">
+          <option value="">— None —</option>
+          {% for c in categories %}
+          <option value="{{ c.id }}">{{ c.icon + ' ' if c.icon }}{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field flex-1">
+        <label class="field-label" for="entry_date">Date</label>
+        <input id="entry_date" name="entry_date" type="date" class="field-input" />
+      </div>
+
+    </div>
+
+    {% if tags %}
+    <div class="field">
+      <label class="field-label">Tags</label>
+      <div class="flex flex-wrap gap-2 mt-1">
+        {% for t in tags %}
+        <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+          <input type="checkbox" name="tag_ids" value="{{ t.id }}"
+                 class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+          <span class="text-sm text-gray-700">
+            {% if t.icon %}<span>{{ t.icon }}</span>{% endif %}
+            {{ t.name }}
+          </span>
+          <span class="w-2.5 h-2.5 rounded-full inline-block"
+                style="background: {{ t.color }}"></span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <div class="flex gap-3 justify-end">
+    <a href="{{ url_for('main.mode_overview', mode=mode) }}" class="btn-ghost">Cancel</a>
+    <button type="submit" class="btn btn-primary">Save Entry</button>
+  </div>
+
+</form>
+
+{% endblock %}
