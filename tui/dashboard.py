@@ -1,7 +1,9 @@
+import os
+
 from rich.text import Text
 from textual.containers import Horizontal, Vertical, VerticalScroll
-from textual.screen import Screen
-from textual.widgets import ContentSwitcher, DataTable, Footer, Header, Label, ListItem, ListView, Static
+from textual.screen import ModalScreen, Screen
+from textual.widgets import ContentSwitcher, DataTable, Input, OptionList, Static
 
 from utils import db
 
@@ -27,8 +29,29 @@ def entry_detail(entry, tags):
     return Text('\n').join(lines)
 
 
+COMMANDS = ['change-category', 'reload', 'lock', 'quit']
+
+
+class CategoryPicker(ModalScreen):
+    BINDINGS = [('escape', 'dismiss(None)')]
+
+    def __init__(self, names):
+        super().__init__()
+        self.names = names
+
+    def compose(self):
+        yield OptionList(*self.names, id='category-list')
+
+    def on_mount(self):
+        self.query_one(OptionList).border_title = 'Change category'
+
+    def on_option_list_option_selected(self, event):
+        self.dismiss(event.option_index)
+
+
 class DashboardScreen(Screen):
     BINDINGS = [
+        ('colon', 'open_command', 'Command'),
         ('r', 'reload', 'Refresh'),
         ('l', 'app.lock', 'Lock'),
         ('q', 'app.quit', 'Quit'),
@@ -41,31 +64,106 @@ class DashboardScreen(Screen):
         self.current_page = self.pages[0]
 
     def compose(self):
-        yield Header(show_clock=True)
-        with Horizontal(id='panes'):
-            yield ListView(*[ListItem(Label(name)) for _, name in self.pages], id='sidebar')
-            with Vertical(id='main-pane'):
-                yield Static(id='page-title')
-                with ContentSwitcher(initial='overview', id='switcher'):
-                    with Horizontal(id='overview'):
-                        for _ in self.pages[1:]:
-                            yield Static(classes='card')
-                    with Vertical(id='mode-view'):
-                        yield DataTable(id='entries', cursor_type='row')
-                        with VerticalScroll(id='detail-pane'):
-                            yield Static(id='detail')
-        yield Footer()
+        yield Static(id='breadcrumb')
+        with Vertical(id='main-pane'):
+            yield Static(id='page-title')
+            with ContentSwitcher(initial='overview', id='switcher'):
+                with Horizontal(id='overview'):
+                    for _ in self.pages[1:]:
+                        yield Static(classes='card')
+                with Vertical(id='mode-view'):
+                    yield DataTable(id='entries', cursor_type='row')
+                    with VerticalScroll(id='detail-pane'):
+                        yield Static(id='detail')
+        yield Static(id='completions')
+        yield Static(id='modeline')
+        with Horizontal(id='command-row'):
+            yield Input(id='command', placeholder='Press : for commands')
+            yield Static(id='command-category')
 
     def on_mount(self):
         self.query_one('#entries', DataTable).add_columns('Name', 'Category', 'Date', 'Created')
         self.query_one('#detail-pane').border_title = 'Details'
-        active_user = db.get_active_user()
-        self.sub_title = f"Welcome, {active_user['username']}" if active_user else ''
+        self.active_user = db.get_active_user()
         self.show_page(*self.current_page)
 
-    def on_list_view_highlighted(self, event):
-        if event.list_view.index is not None:
-            self.show_page(*self.pages[event.list_view.index])
+    def action_open_command(self):
+        command = self.query_one('#command', Input)
+        command.value = ':'
+        command.focus()
+        # Input resets the cursor on focus, so move it past the colon afterwards
+        command.call_after_refresh(command.action_end)
+
+    def close_command(self):
+        self.query_one('#command', Input).value = ''
+        self.query_one('#completions', Static).display = False
+        self.query_one('#entries', DataTable).focus()
+
+    def candidates(self, value):
+        name, space, arg = value.lstrip(':').partition(' ')
+        if not space:
+            return [f':{c}' for c in COMMANDS if c.startswith(name.lower())]
+        if name == 'change-category':
+            return [f':{name} {n}' for _, n in self.pages if n.lower().startswith(arg.lower())]
+        return []
+
+    def on_input_changed(self, event):
+        # Deleting the leading colon leaves command mode, like vim
+        if not event.value.startswith(':'):
+            if event.input.has_focus:
+                self.close_command()
+            return
+        completions = self.query_one('#completions', Static)
+        # Show only the word being completed, as Emacs does in *Completions*
+        words = [c.rsplit(' ', 1)[-1].lstrip(':') for c in self.candidates(event.value)]
+        completions.update(Text('   '.join(words)))
+        completions.display = bool(words)
+
+    def on_key(self, event):
+        command = self.query_one('#command', Input)
+        if not command.has_focus:
+            return
+        if event.key == 'escape':
+            self.close_command()
+        elif event.key == 'tab':
+            # Complete up to the longest common prefix of the candidates
+            found = self.candidates(command.value)
+            if found:
+                command.value = found[0][:len(os.path.commonprefix([c.lower() for c in found]))]
+                command.action_end()
+        else:
+            return
+        event.stop()
+        event.prevent_default()
+
+    def on_input_submitted(self, event):
+        name, _, arg = event.value.lstrip(':').strip().partition(' ')
+        self.close_command()
+        if name == 'change-category':
+            self.change_category(arg.strip())
+        elif name == 'reload':
+            self.action_reload()
+        elif name == 'lock':
+            self.app.action_lock()
+        elif name in ('q', 'quit'):
+            self.app.exit()
+        elif name:
+            self.notify(f'Unknown command: {name}', severity='error')
+
+    def change_category(self, wanted):
+        names = [name for _, name in self.pages]
+        if not wanted:
+            self.app.push_screen(CategoryPicker(names), self.select_category)
+            return
+        matches = [i for i, name in enumerate(names) if name.lower() == wanted.lower()]
+        if matches:
+            self.select_category(matches[0])
+        else:
+            self.notify(f'No category: {wanted}', severity='error')
+
+    def select_category(self, index):
+        if index is not None:
+            self.show_page(*self.pages[index])
 
     def on_data_table_row_highlighted(self, event):
         entry, tags = db.get_entry(int(event.row_key.value))
@@ -77,6 +175,8 @@ class DashboardScreen(Screen):
 
     def show_page(self, slug, name):
         self.current_page = (slug, name)
+        self.query_one('#breadcrumb', Static).update(f'Organizer/{name}')
+        self.query_one('#command-category', Static).update(name)
         if slug is None:
             self.show_overview()
         else:
@@ -90,6 +190,7 @@ class DashboardScreen(Screen):
             card.border_title = name
             card.update(entry_label(entry_count))
         self.query_one('#page-title', Static).update(f'Overview · {entry_label(total)}')
+        self.update_modeline('Overview', entry_label(total))
         self.query_one('#switcher', ContentSwitcher).current = 'overview'
 
     def show_mode(self, slug, name):
@@ -107,4 +208,9 @@ class DashboardScreen(Screen):
         detail = entry_detail(*db.get_entry(entries[0]['id'])) if entries else 'No entries yet.'
         self.query_one('#detail', Static).update(detail)
         self.query_one('#page-title', Static).update(f'{name} · {entry_label(len(entries))}')
+        self.update_modeline(name, entry_label(len(entries)))
         self.query_one('#switcher', ContentSwitcher).current = 'mode-view'
+
+    def update_modeline(self, name, count):
+        username = self.active_user['username'] if self.active_user else '-'
+        self.query_one('#modeline', Static).update(Text(f' -:---  Organizer  {name}  ({count})  [{username}]'))
